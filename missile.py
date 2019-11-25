@@ -37,14 +37,16 @@ def kinematics(vx0, vy0, vz0, t, x0=0, y0=0, z0=0, g=0, vt=0):
 
 
 @jit
-def rocket_equation(vx, vy, vz, t, x, y, z, g, rho_0, mass, r_mass, delta_t, delta_m, A, C_d, c):
+def rocket_equation(vx, vy, vz, t, x, y, z, g, rho_0, mass, r_mass, delta_t, delta_m, A, C_d, c,
+                    vx_sched, vy_sched, vz_sched):
     # Set up total mass
     mass_tot = mass + r_mass
 
     # Update velocities
-    vx += 0.3*delta_t/mass_tot*(-1/2*rho_0*np.exp(z/8000)*vx**2*A*C_d - c*delta_m)
-    vy += 0.3*delta_t/mass_tot*(-1/2*rho_0*np.exp(z/8000)*vy**2*A*C_d - c*delta_m)
-    vz += 0.4*delta_t/mass_tot*(-mass_tot*g - 1/2*rho_0*np.exp(z/8000)*vz**2*A*C_d - c*delta_m)
+    vx += vx_sched*delta_t/mass_tot*(-1/2*rho_0*np.exp(z/8000)*vx**2*A*C_d - c*delta_m)
+    vy += vy_sched*delta_t/mass_tot*(-1/2*rho_0*np.exp(z/8000)*vy**2*A*C_d - c*delta_m)
+    vz += vz_sched*delta_t/mass_tot*(-mass_tot*g - 1/2*rho_0*np.exp(z/8000)*vz**2*A*C_d - \
+                                     c*delta_m)
 
     # Update positions
     x += vx*delta_t
@@ -56,9 +58,10 @@ def rocket_equation(vx, vy, vz, t, x, y, z, g, rho_0, mass, r_mass, delta_t, del
     print(z)
     return x, y, z, vx, vy, vz, r_mass
 
+
 def rocket():
     # Simulation variables
-    steps = 5000
+    steps = 1000
     delta_t = 0.025
 
     # System variables
@@ -79,11 +82,27 @@ def rocket():
 
     C_d = 0.1            # Coefficient of drag
     c = 50000             # Exhaust force
-    delta_m = -10         # Change in mass
+    delta_m = -1         # Change in mass
     A = 0.25              # Cross sectional area
     mass = 1000           # Total mass of rocket without fuel
     r_mass = 1000         # Mass of fuel
     rho_0 = 1.2754        # Initial density of air
+
+    vx_sched = np.ones(int(-mass/delta_m))*.45
+    vy_sched = np.ones(int(-mass/delta_m))*.45
+    vz_sched = np.ones(int(-mass/delta_m))*0.1
+
+    # Changing Flight path
+    vz_sched[200:400] *= -1
+
+    vx_sched[400:500] += 0.05
+    vy_sched[400:500] += 0.05
+    vz_sched[400:500] *= 0
+
+    vx_sched[500:] -= 0.1
+    vy_sched[500:] -= 0.1
+    vz_sched[500:] *= -2
+
 
     # Constants
     g = 9.81
@@ -94,7 +113,8 @@ def rocket():
     for i in tqdm(range(steps)):
         if(r_mass > 0):
             x, y, z, vx, vy, vz, r_mass = rocket_equation(vx, vy, vz, i*delta_t, x, y, z,
-                                            g, rho_0, mass, r_mass, delta_t, delta_m, A, C_d, c)
+                                            g, rho_0, mass, r_mass, delta_t, delta_m, A, C_d, c,
+                                            vx_sched[i], vy_sched[i], vz_sched[i])
         elif(not done): # Initial parameters for switching from rocket to kinematics
             print("KINEMATICS AT STEP: {}".format(i))
             init_x = x
@@ -148,10 +168,10 @@ def rocket():
         maxy.append(np.max(ys[i]))
         maxz.append(np.max(zs[i]))
 
-    for i in tqdm(range(len(xs))):
-        if(end):
-            plot(steps, i, xs[i], ys[i], zs[i],
-                       1.1*np.max(maxx), 1.1*np.max(maxy), 1.1*np.max(maxz), kt)
+    kt = 1000
+    for i in tqdm(range(0, len(xs))):
+        plot(steps, i, xs[i], ys[i], zs[i],
+                   1.1*np.max(maxx), 1.1*np.max(maxy), 1.1*np.max(maxz), kt)
 
     print("WRITING FILE")
     np.savetxt("./graph_missile/x_dat.txt", xs)
