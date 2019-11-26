@@ -93,6 +93,10 @@ def response():
     pass
 
 def rocket():
+    # Directory to save
+    directory = './track_graph_missile'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
     # Simulation variables
     steps = 1000
     delta_t = 0.025
@@ -349,7 +353,6 @@ def rocket():
     maxx = []
     maxy = []
     maxz = []
-    fig, ax = plt.subplots()
 
     for i in range(len(xs)):
         maxx.append(np.max(xs[i]))

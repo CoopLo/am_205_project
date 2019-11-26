@@ -60,6 +60,11 @@ def rocket_equation(vx, vy, vz, t, x, y, z, g, rho_0, mass, r_mass, delta_t, del
 
 
 def rocket():
+    # Directory to save
+    directory = './graph_missile'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
     # Simulation variables
     steps = 1000
     delta_t = 0.025
@@ -191,5 +196,7 @@ def rocket():
 
 
 if __name__ == '__main__':
+    if not os.path.exists('./graph_missile'):
+        os.makedirs('./graph_missile')
     rocket()
 
