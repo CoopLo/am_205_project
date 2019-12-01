@@ -193,3 +193,10 @@ def rocket():
 if __name__ == '__main__':
     rocket()
 
+
+# TODO
+    # Calculation speeed is fast enough where entire trajectory can be simulated for both
+    # enemy and response. Just need to find an intersection after that.
+    # Could be done by calling separate script that outputs initial params for response
+    # including a start time, current script waits for that to be done and then launches
+    # the response
