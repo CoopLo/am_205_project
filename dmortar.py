@@ -31,6 +31,11 @@ def kinematics(vx0, vy0, t, x0=0, y0=0, g=0, vt=0):
     
 
 def mortar():
+    # Directory to save
+    directory = './mortar_drag'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
     steps = 400
     delta_t = 0.025
     vx0 = 1000
