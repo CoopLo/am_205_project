@@ -4,6 +4,7 @@ from numba import jit
 from tqdm import tqdm
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import time
 
 
 @jit
@@ -48,9 +49,26 @@ def rocket_equation(vx, vy, vz, t, x, y, z, g, rho_0, mass, r_mass, delta_t, del
     return x, y, z, vx, vy, vz, r_mass
 
 
-@jit
-def response():
-    pass
+def write(x, y, z, vx, vy, vz):
+    with open("./parallel_test/enemy_x.txt", 'a+') as fout:
+        fout.write("{}\n".format(x))
+    fout.close()
+    with open("./parallel_test/enemy_y.txt", 'a+') as fout:
+        fout.write("{}\n".format(y))
+    fout.close()
+    with open("./parallel_test/enemy_z.txt", 'a+') as fout:
+        fout.write("{}\n".format(z))
+    fout.close()
+    with open("./parallel_test/enemy_vx.txt", 'a+') as fout:
+        fout.write("{}\n".format(vx))
+    fout.close()
+    with open("./parallel_test/enemy_vy.txt", 'a+') as fout:
+        fout.write("{}\n".format(vy))
+    fout.close()
+    with open("./parallel_test/enemy_vz.txt", 'a+') as fout:
+        fout.write("{}\n".format(vz))
+    fout.close()
+
 
 def rocket():
     # Simulation variables
@@ -123,15 +141,17 @@ def rocket():
             x, y, z, vx, vy, vz = kinematics(vx0, vy0, vz0, (i-kt)*delta_t,
                                              init_x, init_y, init_z, g, vt)
 
-        inside.append(inside_hemisphere(x, y, z, center, radius))
+        #inside.append(inside_hemisphere(x, y, z, center, radius))
 
         # Hold on to current values
-        xs.append(x)
-        ys.append(y)
-        zs.append(z)
-        vxs.append(vx)
-        vys.append(vy)
-        vzs.append(vz)
+        write(x, y, z, vx, vy, vz)
+        #xs.append(x)
+        #ys.append(y)
+        #zs.append(z)
+        #vxs.append(vx)
+        #vys.append(vy)
+        #vzs.append(vz)
+        time.sleep(delta_t)
 
 
 if __name__ == '__main__':

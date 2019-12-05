@@ -48,7 +48,7 @@ def rocket_equation(vx, vy, vz, t, x, y, z, g, rho_0, mass, r_mass, delta_t, del
     return x, y, z, vx, vy, vz, r_mass
 
 
-def respones(measurements):
+def response():
     # Simulation variables
     steps = 1000
     delta_t = 0.025
@@ -106,6 +106,28 @@ def respones(measurements):
         pass
 
     # Response missile
+    enemy_x, enemy_y, enemy_z = None, None, None
+    ex, ey, ez = [], [], []
+    while(len(ex) < 4 and len(ey) < 4 and len(ez) < 4):
+        try: # Make sure we have output to monitor
+            enemy_x = np.loadtxt("./parallel_test/enemy_x.txt")[-1]
+            enemy_y = np.loadtxt("./parallel_test/enemy_y.txt")[-1]
+            enemy_z = np.loadtxt("./parallel_test/enemy_z.txt")[-1]
+
+            #try: # Now collect data if enemy missile is in detection radius
+            if(np.sqrt((enemy_x-center[0])**2 +
+                       (enemy_y-center[1])**2 +
+                       (enemy_z)**2) < radius):
+                print("\nBEING DETECTED\n")
+                ex.append(enemy_x)
+                ey.append(enemy_y)
+                ez.append(enemy_z)
+                print(len(ex))
+        except (OSError, IndexError): # OSError catches no files, IndexError catches one line
+            pass
+            #print("NOT ENOUGH DATA")
+
+    print("ENEMY X: {}\nENEMY Y: {}\nENEMY Z: {}".format(ex, ey, ez))
     for i in tqdm(range(steps)):
         x, y, z, vx, vy, vz, r_mass = rocket_equation(vxs[-1], vys[-1], vzs[-1], i*delta_t,
                                        xs[-1], ys[-1], zs[-1],
