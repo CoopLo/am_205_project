@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 def kalman_update(x, P, F, B, u, Q, measurement, z, R, H):
     '''Performs one step of Kalman filter update (with measurements if provided).
-    
+
     x : Current state estimate vector.
     P : Current state covariance matrix.
     F : State transition matrix.
@@ -13,7 +13,7 @@ def kalman_update(x, P, F, B, u, Q, measurement, z, R, H):
     z : Current measured state vector.
     R : Measured state uncertainty matrix.
     H : Mapping matrix from states to measurements (not needed).'''
-    
+
     assert x.shape == (6,1)
     assert P.shape == (6,6)
     assert F.shape == (6,6)
@@ -23,7 +23,7 @@ def kalman_update(x, P, F, B, u, Q, measurement, z, R, H):
 
     if measurement==0:
         return xhat, Phat
-    
+
     else:
         Kprime = np.matmul(P, np.matmul(H.T, np.linalg.inv(np.matmul(H, np.matmul(P, H.T)) + R)))
         xhatprime = xhat + np.matmul(Kprime, z - np.matmul(H, xhat))
@@ -92,13 +92,13 @@ def generate_data(xinit, vinit, delta, N, prop, noise):
     return idx, actual.T, noisy
 
 
-D = 2
 xinit = np.array([0,0,0])
 vinit = np.array([100,100,100])
 delta = 0.1
 N = 200
 prop = 0.1
 noise = 10
+state_unc = 40
 
 measurements_idx, actual, measurements = generate_data(xinit, vinit, delta, N, prop, noise)
 
@@ -113,28 +113,32 @@ B = np.array([0,0,0.5*delta**2,0,0,delta]).reshape(-1,1)
 u = np.array([-9.81]).reshape(-1,1)
 
 x, P = solve(measurements, noise*np.eye(6), measurements_idx, np.array([0,0,0,100,100,100]), \
-             np.eye(6), F, B, u, 10*np.eye(6), N, H=np.eye(6))
+             np.eye(6), F, B, u, state_unc*np.eye(6), N, H=np.eye(6))
 
 #### PLOT RESULTS ####
 plt.figure(figsize=(10,6))
 #which axis to plot
 i=0
 j=2
-# plt.plot(x[:,0], x[:,2], c='b')
-plt.scatter(measurements[1:][measurements_idx==1][:,i], measurements[1:][measurements_idx==1][:,j], c='k',\
-            label='Noisy Measurements')
-plt.plot(actual[:,i], actual[:,j], 'r', label='Actual')
-x_bands = []
+plt.plot(x[:,i], x[:,j], c='b', linewidth=5, label='Kalman Estimate')
+plt.plot(actual[:,i], actual[:,j], 'r', label='Actual', linewidth=5)
+x_low = []
+x_high = []
 y_low = []
 y_high = []
 for k in range(N+1):
-    samples = np.random.multivariate_normal(x[k], P[k], 100)
-    lower = np.percentile(samples, 2.5, axis=0)
-    upper = np.percentile(samples, 97.5, axis=0)
-    y_low.append(lower[j])
-    y_high.append(upper[j])
-#     plt.scatter(samples[:, i], samples[:, j], s=3, alpha=0.01, c='b')
-    
-plt.fill_between(actual[:,i], y_low, y_high, alpha=0.2, label='Kalman Estimate')
+    samples = np.random.multivariate_normal(x[k], P[k], 1000)
+    #lower = np.percentile(samples, 2.5, axis=0)
+    #upper = np.percentile(samples, 97.5, axis=0)
+    #x_low.append(lower[i])
+    #x_high.append(upper[i])
+    #y_low.append(lower[j])
+    #y_high.append(upper[j])
+    plt.scatter(samples[:, i], samples[:, j], s=5, alpha=0.01, c='b')
+
+plt.scatter(measurements[1:][measurements_idx==1][:,i], measurements[1:][measurements_idx==1][:,j], c='k',\
+            label='Noisy Measurements', s=150, zorder=5)
+#plt.fill_between(actual[:,i], y_low, y_high, alpha=0.2, color='b', label='Kalman Estimate')
+#plt.fill_betweenx(actual[:,j], x_low, x_high, alpha=0.2, color='b')
 plt.legend()
 plt.show()
