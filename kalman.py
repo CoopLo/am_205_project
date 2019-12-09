@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 def kalman_update(x, P, F, B, u, Q, measurement, z, R, H):
     '''Performs one step of Kalman filter update (with measurements if provided).
@@ -116,27 +117,28 @@ x, P = solve(measurements, noise*np.eye(6), measurements_idx, np.array([0,0,0,10
              np.eye(6), F, B, u, state_unc*np.eye(6), N, H=np.eye(6))
 
 #### PLOT RESULTS ####
-plt.figure(figsize=(10,6))
-#which axis to plot
-i=0
-j=2
-plt.plot(x[:,i], x[:,j], c='b', linewidth=5, label='Kalman Estimate')
-plt.plot(actual[:,i], actual[:,j], 'r', label='Actual', linewidth=5)
+fig = plt.figure(figsize=(10,6))
+ax = fig.add_subplot(111, projection='3d')
+
+#plt.plot(x[:,i], x[:,j], c='b', linewidth=5, label='Kalman Estimate')
+ax.plot3D(actual[:,0], actual[:,1], actual[:,2], 'r', label='Actual', linewidth=5)
 x_low = []
 x_high = []
 y_low = []
 y_high = []
 for k in range(N+1):
-    samples = np.random.multivariate_normal(x[k], P[k], 1000)
+    samples = np.random.multivariate_normal(x[k], P[k], 100)
     #lower = np.percentile(samples, 2.5, axis=0)
     #upper = np.percentile(samples, 97.5, axis=0)
     #x_low.append(lower[i])
     #x_high.append(upper[i])
     #y_low.append(lower[j])
     #y_high.append(upper[j])
-    plt.scatter(samples[:, i], samples[:, j], s=5, alpha=0.01, c='b')
+    ax.scatter(samples[:, 0], samples[:, 1], samples[:, 2], s=5, alpha=0.1, c='b')
 
-plt.scatter(measurements[1:][measurements_idx==1][:,i], measurements[1:][measurements_idx==1][:,j], c='k',\
+ax.scatter(measurements[1:][measurements_idx==1][:,0],
+        measurements[1:][measurements_idx==1][:,1],
+        measurements[1:][measurements_idx==1][:,2], c='k',\
             label='Noisy Measurements', s=150, zorder=5)
 #plt.fill_between(actual[:,i], y_low, y_high, alpha=0.2, color='b', label='Kalman Estimate')
 #plt.fill_betweenx(actual[:,j], x_low, x_high, alpha=0.2, color='b')
