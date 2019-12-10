@@ -1,7 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from math import *
-from mpl_toolkits.mplot3d import Axes3D
+from tqdm import tqdm
 
 #Lagrange interpolation
 def lagrange(x,xx,yy):
@@ -120,8 +119,6 @@ prop = 0.1
 noise = 10
 state_unc = 40
 
-measurements_idx, actual, measurements = generate_data(xinit, vinit, delta, N, prop, noise)
-
 F = np.array([[1,0,0,delta,0,0],
               [0,1,0,0,delta,0],
               [0,0,1,0,0,delta],
@@ -132,74 +129,26 @@ F = np.array([[1,0,0,delta,0,0],
 B = np.array([0,0,0.5*delta**2,0,0,delta]).reshape(-1,1)
 u = np.array([-9.81]).reshape(-1,1)
 
-x, P = solve(measurements, noise*np.eye(6), measurements_idx, np.array([0,0,0,100,100,100]), \
+#### GET MSEs ####
+
+num_trials = 1000
+lagrange_results = []
+kalman_results = []
+
+for n in tqdm(range(num_trials)):
+    measurements_idx, actual, measurements = generate_data(xinit, vinit, delta, N, prop, noise)
+
+    #Lagrange
+    yy=np.array([lagrange(x,measurements[1:][measurements_idx==1][:,0],\
+        measurements[1:][measurements_idx==1][:,2]) for x in actual[:, 0]])
+    lagrange_results.append(np.mean((yy-actual[:, 2])**2))
+
+    #Kalman
+    x, P = solve(measurements, noise*np.eye(6), measurements_idx, np.array([0,0,0,100,100,100]), \
              np.eye(6), F, B, u, state_unc*np.eye(6), N, H=np.eye(6))
+    kalman_results.append(np.mean((x[:, 2]-actual[:, 2])**2))
 
-#### PLOT RESULTS ####
-
-#Lagrange
-plt.figure(figsize=(10,6))
-yy=np.array([lagrange(x,measurements[1:][measurements_idx==1][:,0],\
-    measurements[1:][measurements_idx==1][:,2]) for x in actual[:, 0]])
-print('Lagrange MSE : ', np.mean((yy-actual[:, 2])**2))
-plt.plot(actual[:,0],yy, label='Lagrange Estimate', linewidth=2)
-plt.scatter(measurements[1:][measurements_idx==1][:,0], \
-    measurements[1:][measurements_idx==1][:,2], c='k',\
-    label='Noisy Measurements', zorder=5)
-plt.plot(actual[:, 0],actual[:, 2], 'r', label='Actual', linewidth=2)
-plt.xlim([-250, 2250])
-plt.ylim([-100, 700])
-plt.xlabel('x')
-plt.ylabel('y')
-plt.title('2D Lagrange Interpolation')
-plt.tight_layout()
-plt.legend()
-plt.savefig('lagrange.png')
-
-fig = plt.figure(figsize=(10,6))
-ax = fig.add_subplot(111, projection='3d')
-plt.figure(figsize=(10,6))
-
-plt.plot(x[:,0], x[:,2], label='Kalman Estimate', linewidth=2)
-plt.plot(actual[:,0], actual[:,2], 'r', label='Actual', linewidth=2)
-print('Kalman MSE : ', np.mean((x[:, 2]-actual[:, 2])**2))
-ax.plot3D(actual[:,0], actual[:,1], actual[:,2], 'r', label='Actual')
-x_low = []
-x_high = []
-y_low = []
-y_high = []
-for k in range(N+1):
-    samples = np.random.multivariate_normal(x[k], P[k], 1000)
-    #lower = np.percentile(samples, 2.5, axis=0)
-    #upper = np.percentile(samples, 97.5, axis=0)
-    #x_low.append(lower[i])
-    #x_high.append(upper[i])
-    #y_low.append(lower[j])
-    #y_high.append(upper[j])
-    plt.scatter(samples[:, 0], samples[:, 2], s=5, alpha=0.005)
-    ax.scatter(samples[:, 0], samples[:, 1], samples[:, 2], s=5, alpha=0.01, c='b')
-
-plt.scatter(measurements[1:][measurements_idx==1][:,0], \
-    measurements[1:][measurements_idx==1][:,2], c='k',\
-    label='Noisy Measurements', zorder=5)
-
-ax.scatter(measurements[1:][measurements_idx==1][:,0],
-        measurements[1:][measurements_idx==1][:,1],
-        measurements[1:][measurements_idx==1][:,2], c='k',\
-            label='Noisy Measurements', zorder=5)
-#plt.fill_between(actual[:,i], y_low, y_high, alpha=0.2, color='b', label='Kalman Estimate')
-#plt.fill_betweenx(actual[:,j], x_low, x_high, alpha=0.2, color='b')
-plt.xlim([-250, 2250])
-plt.ylim([-100, 700])
-plt.xlabel('x')
-plt.ylabel('y')
-plt.title('2D Kalman Filtering')
-plt.tight_layout()
-plt.legend()
-plt.savefig('kalman_2d.png')
-
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_zlabel('z')
-ax.text2D(0.5, 0.5, '3D Kalman Filtering', transform=ax.transAxes)
-ax.legend()
+print('Lagrange MSEs mean : ', np.mean(lagrange_results))
+print('Lagrange MSEs std : ', np.std(lagrange_results))
+print('Kalman MSEs mean : ', np.mean(kalman_results))
+print('Kalman MSEs std : ', np.std(kalman_results))
