@@ -36,19 +36,24 @@ def plot2():
             #ax.scatter(px[i], py[i], pz[i])  # , label="ENEMY ROCKET PROJECTION {}".format(i))
 
         # Plot detection hemisphere
-        print("PLOTTING DOME")
         radius = 1500
         origin = [2000, 2000]
         phi, theta = np.mgrid[0.0:0.5 * np.pi:180j, 0.0:2.0 * np.pi:720j]
         dome_x = radius * np.sin(phi) * np.cos(theta) + origin[0]
         dome_y = radius * np.sin(phi) * np.sin(theta) + origin[1]
         dome_z = radius * np.cos(phi)
-        ax.plot_surface(dome_x, dome_y, dome_z, alpha=0.15, color='g')
+
+        color = 'g' if(np.sqrt((ex[i]-origin[0])**2 + \
+                                      (ey[i]-origin[1])**2 + \
+                                      (ez[i])**2) < radius) else 'b'
+
+        print("{} PLOTTING DOME, COLOR: {}".format(i, color))
+        ax.plot_surface(dome_x, dome_y, dome_z, alpha=0.15, color=color)
 
         ground_theta = np.linspace(0, 2 * np.pi, 100)
         ground_x = radius * np.cos(ground_theta) + origin[0]
         ground_y = radius * np.sin(ground_theta) + origin[1]
-        ax.plot(ground_x, ground_y, alpha=0.5, color='g')
+        ax.plot(ground_x, ground_y, alpha=0.5, color=color)
         # ax.set(zlim=(0, max(max(ez), max(pz))))
         ax.set(zlim=(0, max(ez)))
 
@@ -63,7 +68,6 @@ def plot2():
         ax.set_ylim(top=2500)
         plt.savefig(f'./parallel_test/fig{i}')
         plt.close(fig=fig)
-
 
 
 def plot_enemy_projection():
@@ -165,7 +169,7 @@ def test_enemy_and_response():
 
 
 if __name__ == '__main__':
-    #test_enemy_and_response()
+    test_enemy_and_response()
     plot_enemy_projection()
     plot2()
 

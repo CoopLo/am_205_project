@@ -78,10 +78,10 @@ def rocket_equation(vx, vy, vz, t, x, y, z, g, rho_0, mass, r_mass, delta_t, del
     mass_tot = mass + r_mass
 
     # Update velocities
-    #print(vx_sched, delta_t, mass_tot, rho_0, z, vx, A, C_d, c, delta_m)
-    vx += vx_sched*delta_t/mass_tot*(-1/2*rho_0*np.exp(z/8000)*vx**2*A*C_d - c*delta_m)
-    vy += vy_sched*delta_t/mass_tot*(-1/2*rho_0*np.exp(z/8000)*vy**2*A*C_d - c*delta_m)
-    vz += vz_sched*delta_t/mass_tot*(-mass_tot*g - 1/2*rho_0*np.exp(z/8000)*vz**2*A*C_d - \
+    velocity = np.linalg.norm([vx, vy, vz])
+    vx += vx_sched*delta_t/mass_tot*(-1/2*rho_0*np.exp(z/8000)*velocity**2*A*C_d - c*delta_m)
+    vy += vy_sched*delta_t/mass_tot*(-1/2*rho_0*np.exp(z/8000)*velocity**2*A*C_d - c*delta_m)
+    vz += vz_sched*delta_t/mass_tot*(-mass_tot*g - 1/2*rho_0*np.exp(z/8000)*velocity**2*A*C_d - \
                                      c*delta_m)
 
     # Update positions
