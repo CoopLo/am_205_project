@@ -105,13 +105,13 @@ def rocket(delta_t=0.025):
     # Changing Flight path
     vz_sched[int(200 * (0.025/delta_t)): int(400 * (0.025/delta_t))] *= -1
 
-    vx_sched[int(400 * (0.025/delta_t)):int(500 * (0.025/delta_t))] += 0.05
-    vy_sched[int(400 * (0.025/delta_t)):int(500 * (0.025/delta_t))] += 0.05
+    vx_sched[int(400 * (0.025/delta_t)):int(500 * (0.025/delta_t))] += 0.1
+    vy_sched[int(400 * (0.025/delta_t)):int(500 * (0.025/delta_t))] += 0.0
     vz_sched[int(400 * (0.025/delta_t)):int(500 * (0.025/delta_t))] *= 0
 
-    vx_sched[int(500 * (0.025/delta_t)):] -= 0.1
-    vy_sched[int(500 * (0.025/delta_t)):] -= 0.1
-    vz_sched[int(500 * (0.025/delta_t)):] *= -2
+    vx_sched[int(500 * (0.025/delta_t)):] -= 0
+    vy_sched[int(500 * (0.025/delta_t)):] -= 0
+    vz_sched[int(500 * (0.025/delta_t)):] *= -1
 
 
     # Constants

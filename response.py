@@ -49,9 +49,10 @@ def kinematics_acc(vx0, vy0, vz0, ax, ay, az, t, x0=0, y0=0, z0=0, g=0, vt=100):
 
         NOTE: ONLY WAY TO CONTROL DRAG FORCE IS TO MODITY TERMINAL VELOCITY
     '''
-    x = x0 + vx0*vt/g*(1 - np.exp(-g*t/vt))
-    y = y0 + vy0*vt/g*(1 - np.exp(-g*t/vt))
-    z = z0 + vt/g*(vz0 + vt)*(1 - np.exp(-g*t/vt)) - vt*t
+    delta_t = 0.025
+    x = x0 + vx0*vt/g*(1 - np.exp(-g*t/vt))*delta_t
+    y = y0 + vy0*vt/g*(1 - np.exp(-g*t/vt))*delta_t
+    z = z0 + (vt/g*(vz0 + vt)*(1 - np.exp(-g*t/vt)) - vt*t)*delta_t
     return x, y, z
 
 
@@ -159,7 +160,7 @@ def detect_project(center, radius, delta_t, g, num=0, detected=False):
 
     # project out 100 steps at a time?
     proj_x, proj_y, proj_z = [ex[-1]], [ey[-1]], [ez[-1]]
-    for i in range(1, 50):
+    for i in range(1, 200):
         # Kinematics for one step
         px, py, pz = kinematics_acc(vx, vy, vz, ax, ay, az, i*delta_t, px, py, pz, g)
         
@@ -211,7 +212,7 @@ def find_best_point(vx, vy, vz, x, y, z, g, rho_0, mass, r_mass, delta_t, delta_
         xs, ys, zs = [x], [y], [z]
 
         # Need to compare with 
-        last_dist = 501
+        last_dist = 2000
         #print("AIMING AT: {}".format(t_idx))
         for i in range(t_idx):
             tx, ty, tz, tvx, tvy, tvz, tr_mass = rocket_equation(
@@ -228,29 +229,41 @@ def find_best_point(vx, vy, vz, x, y, z, g, rho_0, mass, r_mass, delta_t, delta_
             t_vzs.append(vz)
 
             # Distance between enemy and response
-            dist = np.sqrt((tx - px[i])**2 + (ty - py[i])**2 + (tz - pz[i])**2)
+            dist = np.linalg.norm([tx - px[i], ty - py[i], tz - pz[i]])
+            #dist = np.sqrt((tx - px[i])**2 + (ty - py[i])**2 + (tz - pz[i])**2)
             #print("DISTANCE: {}".format(dist))
 
             # Within hit radius
             if(dist < 2):
                 print("HIT AT TIME: {}\n".format(i))
-                ts.append((t_idx, i, 'hit'))
+                ts.append((t_idx, i, dist, 'hit'))
                 print("WE HIT IT RETURN NOW PLEASE")
                 return [px[t_idx], py[t_idx], pz[t_idx]]
 
             # Getting farther away
-            if(dist > last_dist and i > 3):
+            if(dist > last_dist):
+                #print(f"FARTHER AWAAAAAY {i}")
                 #print("FARTHER AWAY AT TIME: {}\n".format(i))
-                ts.append([t_idx, i, 'away'])
+                ts.append([t_idx, i-1, dist, 'away'])
                 break
 
+            if i >= t_idx-1:
+                ts.append([t_idx, i, dist, 'last'])
             last_dist = dist
-        #print()
+        #print("NEXT ITER>>>>>>>>")
 
-    #print(ts)
-    best_idx = ts[0][1]
+    for i in ts:
+        print(i)
+
+    best_idx = np.argmin([i[3] for i in ts])
+    print(f'{best_idx}')
+    #best_idx = ts[best_idx][1]
     best_point = [px[best_idx], py[best_idx], pz[best_idx]]
     print("BEST AIM POINT: {}".format(best_point))
+    print(f'best point origin {x} {y} {z}')
+    print(f'rocket point {px[0]} {py[0]} {pz[0]}')
+    print(f'distance: {np.linalg.norm(np.array([x, y, z])) - np.linalg.norm(np.array([px[0], py[0], pz[0]]))}')
+
     return best_point
 
 
@@ -259,8 +272,8 @@ def response(delta_t=0.025):
     steps = int(1000 * 0.025/delta_t)
 
     # Intercepting system variables
-    center = [1000, 1000]
-    radius = 500
+    center = [2000, 2000]
+    radius = 1500
     inside = [False]
 
     # Initital position
@@ -284,7 +297,7 @@ def response(delta_t=0.025):
     cur_dists = []
 
     C_d = 0.1            # Coefficient of drag
-    c = 100000           # Exhaust force
+    c = 500000           # Exhaust force
     projection = 115
     time_projection = 115
     delta_m = -1         # Change in mass
@@ -310,7 +323,13 @@ def response(delta_t=0.025):
     #while(not(collision)):
     aim_points = []
     detected = False
-    for i in range(20):
+    missed_height = False
+
+    detect_time = 0
+
+    for i in range(40):
+        if missed_height is True:
+            break
         #print("PROJECTION: {}".format(i))
         # Project out
         projections, px, py, pz, detected = detect_project(center, radius, delta_t, g,
@@ -322,7 +341,8 @@ def response(delta_t=0.025):
                                      delta_m, A, C_d, c, px, py, pz)
         #print("FOUND BEST POINT")
 
-        aim_points.append(best_point)
+        if zs[-1] < best_point[2]:
+            aim_points.append(best_point)
         #time.sleep(10*delta_t)
         #continue
         #for t_idx in range(1, len(px)):
@@ -345,12 +365,16 @@ def response(delta_t=0.025):
 
         for k in range(5):
             x, y, z, vx, vy, vz, r_mass = rocket_equation(
-                                           vxs[-1], vys[-1], vzs[-1], k*delta_t,
-                                           xs[-1], ys[-1], zs[-1], g, rho_0, mass, 
+                                           vxs[-1], vys[-1], vzs[-1], delta_t,
+                                           xs[-1], ys[-1], zs[-1], g, rho_0, mass,
                                            r_mass, delta_t, delta_m, A, C_d, c,
                                            x_frac, y_frac, z_frac)
             if(r_mass <= 0):
                 break
+
+            """if z > best_point[2]:
+                missed_height = True
+                break"""
 
             xs.append(x)
             ys.append(y)
@@ -359,7 +383,15 @@ def response(delta_t=0.025):
             vys.append(vy)
             vzs.append(vz)
 
+        sleep_counter = 0
+        while detect_time > len(np.loadtxt("./parallel_test/enemy_x.txt"))-5 and sleep_counter < 5:
             time.sleep(delta_t)
+            sleep_counter += 1
+
+        detect_time = len(np.loadtxt("./parallel_test/enemy_x.txt"))
+
+        #print(len(np.loadtxt("./parallel_test/enemy_x.txt")))
+        #print(len(xs))
     
     np.savetxt("./parallel_test/response_x.txt", xs)
     np.savetxt("./parallel_test/response_y.txt", ys)
