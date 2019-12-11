@@ -111,6 +111,7 @@ def generate_data(xinit, vinit, delta, N, prop, noise):
     return idx, actual.T, noisy
 
 
+# Initialisations
 xinit = np.array([0,0,0])
 vinit = np.array([100,100,100])
 delta = 0.1
@@ -119,6 +120,7 @@ prop = 0.1
 noise = 10
 state_unc = 40
 
+# Matrices for kalman updates
 F = np.array([[1,0,0,delta,0,0],
               [0,1,0,0,delta,0],
               [0,0,1,0,0,delta],

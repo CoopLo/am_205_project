@@ -4,9 +4,10 @@ from mpl_toolkits.mplot3d import Axes3D
 from scipy.optimize import minimize
 
 def f(params):
-    return 0.5*params[0]**2
+    '''Objective to be minimised.
 
-#params = {t, vxprime, vyprime, vzprime}
+    params : Array of form [time, vxprime, vyprime, vzprime].'''
+    return 0.5*params[0]**2
 
 x0, y0, z0, vx, vy, vz, x0prime, y0prime, z0prime, g, delta = 0, 0, 0, 80, 80, 80, 500, 500, 0, 9.81, 0.1
 
@@ -20,6 +21,7 @@ def kinematics(x_curr, y_curr, z_curr, vx, vy, vz, deltat, t_final):
 
     return xs, ys, zs
 
+# Implement required constraints.
 cons = ({'type': 'eq', 'fun': lambda x: x0prime - x0 + x[1]*(x[0] - delta) - vx*x[0]},
         {'type': 'eq', 'fun': lambda x: y0prime - y0 + x[2]*(x[0] - delta) - vy*x[0]},
         {'type': 'eq', 'fun': lambda x: z0prime - z0 + x[3]*(x[0] - delta) -
@@ -27,6 +29,7 @@ cons = ({'type': 'eq', 'fun': lambda x: x0prime - x0 + x[1]*(x[0] - delta) - vx*
         {'type': 'ineq', 'fun': lambda x: x[0] - delta},
         {'type' : 'ineq', 'fun': lambda x: 100**2 - x[1]**2 - x[2]**2 - x[3]**2})
 
+# Minimise objective subject to constraints.
 res = minimize(f, (1, 50, 50, 50), method='SLSQP', constraints=cons)
 
 print(res)
@@ -34,6 +37,7 @@ print(res)
 t, vxprime, vyprime, vzprime = res.x
 deltat = 0.025
 
+# Obtain enemy and response trajectories using forward integration.
 xs,ys,zs = kinematics(x0, y0, z0, vx, vy, vz, deltat, t)
 xprimes,yprimes,zprimes = kinematics(x0prime, y0prime, z0prime, vxprime,
         vyprime, vzprime, deltat, t-delta)
