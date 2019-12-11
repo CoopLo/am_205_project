@@ -22,4 +22,4 @@ Run optimisation-based framework for enemy missile interception with response mi
 ```
 python3 enemy_response.py
 ```
-Run numerical-based framework for enemy missile interception. Runs `enemy.py` and `response.py` in parallel, which handle enemy missile trajectory projection and numerical-based response missile respectively. Generates plots of interception. All parameters of the trajectories can be set within the file.
+Run numerical-based framework for enemy missile interception. Runs `enemy.py` and `response.py` in parallel, which handle enemy missile trajectory projection and numerical-based response missile respectively. Generates plots of interception. Creates `parallel_test` directory and stores all enemy and response trajectories, along with plots. All parameters of the trajectories can be set within the file.
