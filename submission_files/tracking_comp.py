@@ -1,6 +1,7 @@
 import numpy as np
 from math import *
 from tqdm import tqdm
+import sys
 
 #Lagrange interpolation
 def lagrange(x,xx,yy):
@@ -133,7 +134,7 @@ u = np.array([-9.81]).reshape(-1,1)
 
 #### GET MSEs ####
 
-num_trials = 1000
+num_trials = int(sys.argv[1])
 lagrange_results = []
 kalman_results = []
 
