@@ -112,7 +112,6 @@ def detect_project(center, radius, delta_t, g, num=0, detected=False):
 
     detect = True
     start_len = 99999999999999
-    #print("YO MAN WHAT THE FUCK")
     while((len(ex) < 4 and len(ey) < 4 and len(ez) < 4) and not(detected)):
         try: # Make sure we have output to monitor
             en_x = np.loadtxt("./parallel_test/enemy_x.txt")
