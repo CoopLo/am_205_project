@@ -158,6 +158,12 @@ def test_enemy_and_response():
     directory = './parallel_test'
     if not os.path.exists(directory):
         os.makedirs(directory)
+    else:
+        files = os.listdir("./")
+        num_tests = sum("parallel_test" in f for f in files)
+        os.rename(directory, directory+"_"+str(num_tests))
+        os.makedirs(directory)
+        raise
 
     #delta_t = 0.025
     p1 = Process(target=enemy_rocket)
